@@ -26,21 +26,21 @@ def gamma_correction(image: Union[str, Image.Image], gamma: float = 2.2) -> Imag
 
 	if isinstance(image, str):  # If it's a string, then it's treated as a file path
 		image = Image.open(image)
-	
+
 	if gamma == 1:
 		# If gamma is 1, the image remains unchanged
 		return image
-	
+
 	# Converting the image to RGB mode if it's not already
-	if image.mode != 'RGB':
-		image = image.convert('RGB')
-	
+	if image.mode != "RGB":
+		image = image.convert("RGB")
+
 	image_array = np.array(image)
-	
+
 	# Applying gamma correction
 	# gamma correction formula:
 	# P_c = (P_uc / P_max) ^ γ * P_max
 	corrected_array = np.power(image_array / 255.0, gamma) * 255
 	corrected_image = Image.fromarray(corrected_array.astype(np.uint8))
-	
+
 	return corrected_image

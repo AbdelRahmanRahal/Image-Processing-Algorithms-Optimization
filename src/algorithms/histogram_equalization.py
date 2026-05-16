@@ -28,10 +28,10 @@ def histogram_equalization(image: Union[str, Image.Image]) -> Image.Image:
 	to map the pixel intensities to the full range of possible values (0-255),
 	and then using this mapping to transform the pixel values in the image.
 	"""
-	if isinstance(image, str): # If it's a string, then it's treated as a file path
+	if isinstance(image, str):  # If it's a string, then it's treated as a file path
 		# Loading the image using PIL
-		image = Image.open(image).convert('L')
-	
+		image = Image.open(image).convert("L")
+
 	image_array = np.array(image)
 
 	# Calculating histogram
@@ -43,20 +43,26 @@ def histogram_equalization(image: Union[str, Image.Image]) -> Image.Image:
 	cdf = [0] * 256
 	cdf[0] = hist[0]
 	for i in range(1, len(hist)):
-		cdf[i] = cdf[i-1] + hist[i]
+		cdf[i] = cdf[i - 1] + hist[i]
 
 	# Normalizing the cdf
 	cdf_min = min(cdf)
 	cdf_max = max(cdf)
 	if cdf_max != cdf_min:
 		# Normalizing the cdf
-		cdf_normalized = [(value - cdf_min) * 255 / (cdf_max - cdf_min) for value in cdf]
+		cdf_normalized = [
+			(value - cdf_min) * 255 / (cdf_max - cdf_min) for value in cdf
+		]
 	else:
 		# If cdf_max equals cdf_min, skip normalization and keep the original image
 		cdf_normalized = cdf
 
 	# Using cdf_normalized as a lookup table to equalize the image
-	flattened_enhanced_image = [cdf_normalized[pixel] for pixel in image_array.flatten()]
-	enhanced_image = np.array(flattened_enhanced_image, dtype='uint8').reshape(image_array.shape)
-	
+	flattened_enhanced_image = [
+		cdf_normalized[pixel] for pixel in image_array.flatten()
+	]
+	enhanced_image = np.array(flattened_enhanced_image, dtype="uint8").reshape(
+		image_array.shape
+	)
+
 	return Image.fromarray(enhanced_image)

@@ -31,12 +31,13 @@ def sobel(image: Union[str, Image.Image]) -> Image.Image:
 	Note: The Sobel operator is applied separately in the x and y directions, and the magnitudes of the gradients
 	are combined to produce the final edge-detected image. The output image is normalized to the range 0-255.
 	"""
-	if isinstance(image, str): # If it's a string, then it's treated as a file path
+	if isinstance(image, str):  # If it's a string, then it's treated as a file path
 		# Loading the image using PIL
-		image = Image.open(image).convert('L')
+		image = Image.open(image).convert("L")
 
 	image_array = np.array(image)
 
+	# fmt: off
 	# Sobel operators
 	sobel_x = np.array([
 		[-1, 0, 1],
@@ -48,6 +49,7 @@ def sobel(image: Union[str, Image.Image]) -> Image.Image:
 		[ 0,  0,  0],
 		[ 1,  2,  1]
 	])
+	# fmt: on
 
 	# Applying Sobel operators
 	edges_x = convolve(image_array, sobel_x)
@@ -56,7 +58,7 @@ def sobel(image: Union[str, Image.Image]) -> Image.Image:
 	# Combining the results
 	# Magnitude of the gradient:
 	# ||G|| = sqrt(Gx^2 + Gy^2)
-	edges = np.sqrt(edges_x ** 2 + edges_y ** 2)
+	edges = np.sqrt(edges_x**2 + edges_y**2)
 
 	# Checking if the maximum value is zero to avoid division by zero
 	max_value = edges.max()

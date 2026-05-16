@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def convolve(image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
 	"""
 	Applies a convolution operation on an input image using a given kernel.
@@ -28,16 +29,16 @@ def convolve(image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
 	"""
 	# Checking if the kernel is not symmetrical
 	if not np.allclose(kernel, kernel.T, rtol=1e-05, atol=1e-08):
-		kernel = np.flip(kernel) # Rotating the kernel by 180 degrees
+		kernel = np.flip(kernel)  # Rotating the kernel by 180 degrees
 
 	y, x = image.shape
 	m, n = kernel.shape
-	
+
 	y = y - m + 1
 	x = x - m + 1
-	new_image = np.zeros((y,x))
+	new_image = np.zeros((y, x))
 	for i in range(y):
 		for j in range(x):
-			new_image[i][j] = np.sum(image[i:i+m, j:j+m] * kernel)
-	
+			new_image[i][j] = np.sum(image[i : i + m, j : j + m] * kernel)
+
 	return new_image

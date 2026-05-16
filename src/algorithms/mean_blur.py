@@ -32,10 +32,10 @@ def mean_blur(image: Union[str, Image.Image], kernel_size: int = 5) -> Image.Ima
 	the blur is applied. The function processes each color channel (RGB) separately
 	to maintain color integrity.
 	"""
-	if isinstance(image, str): # If it's a string, then it's treated as a file path
+	if isinstance(image, str):  # If it's a string, then it's treated as a file path
 		# Loading the image using PIL
 		image = Image.open(image)
-	
+
 	image_array = np.array(image)
 
 	# Ensuring kernel size is odd
@@ -46,11 +46,11 @@ def mean_blur(image: Union[str, Image.Image], kernel_size: int = 5) -> Image.Ima
 	kernel = [[1 for _ in range(kernel_size)] for _ in range(kernel_size)]
 	kernel = np.array(kernel, dtype=np.float32) / (kernel_size * kernel_size)
 	m, n = kernel.shape
-	
+
 	# Calculating the new dimensions of the blurred image
 	y = image_array.shape[0] - m + 1
 	x = image_array.shape[1] - m + 1
-	
+
 	# Creating an output array with the new dimensions
 	blurred_image = np.zeros((y, x, image_array.shape[2]))
 

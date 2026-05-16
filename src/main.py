@@ -1,9 +1,28 @@
+import time  # for timing
+
 from PIL import ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
+# ---------- Import parallel algorithms (to be created) ----------
+# Replace with your actual parallel implementations
+from algorithms_parallel.adaptive_gamma_correction import (
+	adaptive_gamma_correction as adaptive_gamma_correction_parallel,
+)
+from algorithms_parallel.gamma_correction import (
+	gamma_correction as gamma_correction_parallel,
+)
+from algorithms_parallel.gaussian_blur import gaussian_blur as gaussian_blur_parallel
+from algorithms_parallel.histogram_equalization import (
+	histogram_equalization as histogram_equalization_parallel,
+)
+from algorithms_parallel.mean_blur import mean_blur as mean_blur_parallel
+from algorithms_parallel.sepia import sepia as sepia_parallel
+from algorithms_parallel.sobel import sobel as sobel_parallel
+
+# ---------- Import serial algorithms (your existing ones) ----------
 from algorithms_serial.adaptive_gamma_correction import adaptive_gamma_correction
 from algorithms_serial.gamma_correction import gamma_correction
 from algorithms_serial.gaussian_blur import gaussian_blur as gb
@@ -17,13 +36,13 @@ class Ui_MainWindow(object):
 	def setupUi(self, MainWindow):
 		MainWindow.setObjectName("MainWindow")
 		MainWindow.setEnabled(True)
-		MainWindow.resize(1080, 720)
-		MainWindow.setMinimumSize(QtCore.QSize(1080, 720))
+		MainWindow.resize(1600, 900)
+		MainWindow.setMinimumSize(QtCore.QSize(1600, 900))
 		MainWindow.setMaximumSize(QtCore.QSize(1920, 1080))
 		self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
 		self.centralwidget.setObjectName("centralwidget")
 		self.gridLayoutWidget = QtWidgets.QWidget(parent=self.centralwidget)
-		self.gridLayoutWidget.setGeometry(QtCore.QRect(39, 29, 1001, 631))
+		self.gridLayoutWidget.setGeometry(QtCore.QRect(58, 36, 1482, 789))
 		self.gridLayoutWidget.setObjectName("gridLayoutWidget")
 		self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
 		self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -42,6 +61,8 @@ class Ui_MainWindow(object):
 		self.previewGroupBox.setObjectName("previewGroupBox")
 		self.gridLayout_3 = QtWidgets.QGridLayout(self.previewGroupBox)
 		self.gridLayout_3.setObjectName("gridLayout_3")
+
+		# Original image label (left)
 		self.originalImageLabel = QtWidgets.QLabel(parent=self.previewGroupBox)
 		sizePolicy = QtWidgets.QSizePolicy(
 			QtWidgets.QSizePolicy.Policy.Preferred,
@@ -56,6 +77,44 @@ class Ui_MainWindow(object):
 		self.originalImageLabel.setText("")
 		self.originalImageLabel.setObjectName("originalImageLabel")
 		self.gridLayout_3.addWidget(self.originalImageLabel, 2, 0, 1, 1)
+
+		# Processed image label (serial, middle)
+		self.processedImageLabel = QtWidgets.QLabel(parent=self.previewGroupBox)
+		sizePolicy = QtWidgets.QSizePolicy(
+			QtWidgets.QSizePolicy.Policy.Preferred,
+			QtWidgets.QSizePolicy.Policy.Preferred,
+		)
+		sizePolicy.setHorizontalStretch(0)
+		sizePolicy.setVerticalStretch(0)
+		sizePolicy.setHeightForWidth(
+			self.processedImageLabel.sizePolicy().hasHeightForWidth()
+		)
+		self.processedImageLabel.setSizePolicy(sizePolicy)
+		self.processedImageLabel.setText("")
+		self.processedImageLabel.setObjectName("processedImageLabel")
+		self.gridLayout_3.addWidget(
+			self.processedImageLabel, 2, 1, 1, 1
+		)  # now spans only col 1
+
+		# NEW: Parallel image label (right)
+		self.parallelImageLabel = QtWidgets.QLabel(parent=self.previewGroupBox)
+		sizePolicy = QtWidgets.QSizePolicy(
+			QtWidgets.QSizePolicy.Policy.Preferred,
+			QtWidgets.QSizePolicy.Policy.Preferred,
+		)
+		sizePolicy.setHorizontalStretch(0)
+		sizePolicy.setVerticalStretch(0)
+		sizePolicy.setHeightForWidth(
+			self.parallelImageLabel.sizePolicy().hasHeightForWidth()
+		)
+		self.parallelImageLabel.setSizePolicy(sizePolicy)
+		self.parallelImageLabel.setText("")
+		self.parallelImageLabel.setObjectName("parallelImageLabel")
+		self.gridLayout_3.addWidget(self.parallelImageLabel, 2, 2, 1, 1)
+
+		# Row 3: labels for column headings (optional)
+		# Row 4: existing controls (loadImageButton, selectAlgorithmLabel, algorithmsComboBox)
+
 		self.loadImageButton = QtWidgets.QPushButton(parent=self.previewGroupBox)
 		sizePolicy = QtWidgets.QSizePolicy(
 			QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed
@@ -68,6 +127,7 @@ class Ui_MainWindow(object):
 		self.loadImageButton.setSizePolicy(sizePolicy)
 		self.loadImageButton.setObjectName("loadImageButton")
 		self.gridLayout_3.addWidget(self.loadImageButton, 4, 0, 1, 1)
+
 		self.selectAlgorithmLabel = QtWidgets.QLabel(parent=self.previewGroupBox)
 		sizePolicy = QtWidgets.QSizePolicy(
 			QtWidgets.QSizePolicy.Policy.Preferred,
@@ -81,6 +141,7 @@ class Ui_MainWindow(object):
 		self.selectAlgorithmLabel.setSizePolicy(sizePolicy)
 		self.selectAlgorithmLabel.setObjectName("selectAlgorithmLabel")
 		self.gridLayout_3.addWidget(self.selectAlgorithmLabel, 4, 1, 1, 1)
+
 		self.algorithmsComboBox = QtWidgets.QComboBox(parent=self.previewGroupBox)
 		sizePolicy = QtWidgets.QSizePolicy(
 			QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed
@@ -104,6 +165,18 @@ class Ui_MainWindow(object):
 		self.algorithmsComboBox.addItem("")
 		self.algorithmsComboBox.addItem("")
 		self.gridLayout_3.addWidget(self.algorithmsComboBox, 4, 2, 1, 1)
+
+		# NEW: Compare button (row 5, span all columns)
+		self.compareButton = QtWidgets.QPushButton(parent=self.previewGroupBox)
+		self.compareButton.setObjectName("compareButton")
+		self.gridLayout_3.addWidget(self.compareButton, 5, 0, 1, 3)
+
+		# NEW: Time label at the bottom (row 6)
+		self.timeLabel = QtWidgets.QLabel(parent=self.previewGroupBox)
+		self.timeLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+		self.timeLabel.setObjectName("timeLabel")
+		self.gridLayout_3.addWidget(self.timeLabel, 6, 0, 1, 3)
+
 		self.processedImageLabel = QtWidgets.QLabel(parent=self.previewGroupBox)
 		# self.processedImageLabel.setEnabled(False)
 		sizePolicy = QtWidgets.QSizePolicy(
@@ -653,6 +726,9 @@ class Ui_MainWindow(object):
 		self.applySepiaButton.clicked.connect(self.apply_sepia_filter)
 		self.applySobelButton.clicked.connect(self.apply_sobel_edge_detection)
 
+		# NEW: Connect the compare button
+		self.compareButton.clicked.connect(self.compare_serial_parallel)
+
 		self.AGCGroupBox.show()
 		self.gammaCorrectionGroupBox.hide()
 		self.gaussianGroupBox.hide()
@@ -857,6 +933,99 @@ class Ui_MainWindow(object):
 			)
 		)
 
+	# ============ NEW: Serial vs Parallel comparison ============
+	def compare_serial_parallel(self):
+		"""Run both serial and parallel versions, display outputs and timings."""
+		try:
+			self.image_path
+		except AttributeError:
+			QMessageBox.critical(None, "Error", "Please select an image first.")
+			return
+
+		# Determine selected algorithm
+		algo = self.algorithmsComboBox.currentText()
+
+		# Map to serial and parallel functions and their arguments
+		# (You'll need to adapt the argument extraction to match each algorithm)
+		if algo == "Adaptive Gamma Correction":
+			block_size = self.blockSizeSpinBox.value()
+			gamma_min = self.AGCminimumSlider.value() / 100
+			gamma_max = self.AGCmaximumSlider.value() / 100
+			serial_func = adaptive_gamma_correction
+			parallel_func = adaptive_gamma_correction_parallel
+			args = (self.image_path, block_size, (gamma_min, gamma_max))
+
+		elif algo == "Gamma Correction":
+			gamma = self.gammaSlider.value() / 100
+			serial_func = gamma_correction
+			parallel_func = gamma_correction_parallel
+			args = (self.image_path, gamma)
+
+		elif algo == "Gaussian Blur":
+			kernel_size = self.gaussianKernelSizeSpinBox.value()
+			sigma = self.gaussianRadiusSlider.value() / 10
+			serial_func = gb
+			parallel_func = gaussian_blur_parallel
+			args = (self.image_path, kernel_size, sigma)
+
+		elif algo == "Histogram Equalization":
+			serial_func = histogram_equalization
+			parallel_func = histogram_equalization_parallel
+			args = (self.image_path,)
+
+		elif algo == "Mean Blur":
+			kernel_size = self.meanKernelSizeSpinBox.value()
+			serial_func = mean_blur
+			parallel_func = mean_blur_parallel
+			args = (self.image_path, kernel_size)
+
+		elif algo == "Sepia Filter":
+			gamma = self.sepiaGammaSlider.value() / 100
+			serial_func = sepia
+			parallel_func = sepia_parallel
+			args = (self.image_path, gamma)
+
+		elif algo == "Sobel Edge Detection":
+			serial_func = sobel
+			parallel_func = sobel_parallel
+			args = (self.image_path,)
+
+		else:
+			QMessageBox.warning(None, "Error", "Unknown algorithm selected.")
+			return
+
+		# Run serial
+		start_serial = time.perf_counter()
+		serial_image = serial_func(*args)
+		serial_time = time.perf_counter() - start_serial
+
+		# Run parallel
+		start_parallel = time.perf_counter()
+		parallel_image = parallel_func(*args)
+		parallel_time = time.perf_counter() - start_parallel
+
+		# Display serial image (middle)
+		qimage_serial = ImageQt.toqimage(serial_image)
+		self.processedImageLabel.setPixmap(
+			QPixmap.fromImage(qimage_serial).scaled(
+				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
+			)
+		)
+
+		# Display parallel image (right)
+		qimage_parallel = ImageQt.toqimage(parallel_image)
+		self.parallelImageLabel.setPixmap(
+			QPixmap.fromImage(qimage_parallel).scaled(
+				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
+			)
+		)
+
+		# Update time label
+		self.timeLabel.setText(
+			f"Serial: {serial_time:.4f}s | Parallel: {parallel_time:.4f}s | "
+			f"Speedup: {serial_time / parallel_time:.2f}x"
+		)
+
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
 		MainWindow.setWindowTitle(
@@ -912,6 +1081,12 @@ class Ui_MainWindow(object):
 		self.applySepiaButton.setText(_translate("MainWindow", "Apply"))
 		self.applyHEButton.setText(_translate("MainWindow", "Apply"))
 		self.applySobelButton.setText(_translate("MainWindow", "Apply"))
+
+		# NEW translations
+		self.compareButton.setText(
+			_translate("MainWindow", "Compare Serial vs Parallel")
+		)
+		self.timeLabel.setText(_translate("MainWindow", ""))
 
 
 if __name__ == "__main__":

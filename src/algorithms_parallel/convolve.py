@@ -1,6 +1,8 @@
 import numpy as np
+from numba import njit, prange
 
 
+@njit(parallel=True)
 def convolve(image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
 	"""
 	Applies a convolution operation on an input image using a given kernel.
@@ -34,11 +36,12 @@ def convolve(image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
 	y, x = image.shape
 	m, n = kernel.shape
 
-	y = y - m + 1
-	x = x - m + 1
-	new_image = np.zeros((y, x))
-	for i in range(y):
-		for j in range(x):
-			new_image[i][j] = np.sum(image[i : i + m, j : j + m] * kernel)
+	y_out = y - m + 1
+	x_out = x - m + 1
+	new_image = np.zeros((y_out, x_out))
+
+	for i in prange(y_out):  # Parallel loop like #pragma omp parallel for
+		for j in range(x_out):
+			new_image[i][j] = np.sum(image[i : i + m, j : j + n] * kernel)
 
 	return new_image

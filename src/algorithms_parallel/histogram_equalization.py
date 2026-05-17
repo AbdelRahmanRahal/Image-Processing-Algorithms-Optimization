@@ -1,7 +1,35 @@
 from typing import Union
 
 import numpy as np
+from numba import njit, prange
 from PIL import Image
+
+
+@njit(parallel=True)
+def _histogram_equalization_jit(image_array):
+	# Calculating histogram
+	hist = np.zeros(256, dtype=np.int64)
+	flattened = image_array.ravel()
+	for i in range(flattened.size):
+		hist[flattened[i]] += 1
+
+	# Calculating cumulative sum
+	cdf = np.cumsum(hist)
+
+	# Normalizing the cdf
+	cdf_min = cdf.min()
+	cdf_max = cdf.max()
+	if cdf_max != cdf_min:
+		cdf_normalized = (cdf - cdf_min) * 255 / (cdf_max - cdf_min)
+	else:
+		cdf_normalized = cdf.astype(np.float64)
+
+	# Using cdf_normalized as a lookup table to equalize the image
+	enhanced_flat = np.zeros_like(flattened)
+	for i in prange(flattened.size):
+		enhanced_flat[i] = cdf_normalized[flattened[i]]
+
+	return enhanced_flat.reshape(image_array.shape)
 
 
 def histogram_equalization(image: Union[str, Image.Image]) -> Image.Image:
@@ -34,35 +62,7 @@ def histogram_equalization(image: Union[str, Image.Image]) -> Image.Image:
 
 	image_array = np.array(image)
 
-	# Calculating histogram
-	hist = [0] * 256
-	for pixel in image_array.flatten():
-		hist[pixel] += 1
+	# Using JIT for faster processing
+	enhanced_image = _histogram_equalization_jit(image_array)
 
-	# Calculating cumulative sum
-	cdf = [0] * 256
-	cdf[0] = hist[0]
-	for i in range(1, len(hist)):
-		cdf[i] = cdf[i - 1] + hist[i]
-
-	# Normalizing the cdf
-	cdf_min = min(cdf)
-	cdf_max = max(cdf)
-	if cdf_max != cdf_min:
-		# Normalizing the cdf
-		cdf_normalized = [
-			(value - cdf_min) * 255 / (cdf_max - cdf_min) for value in cdf
-		]
-	else:
-		# If cdf_max equals cdf_min, skip normalization and keep the original image
-		cdf_normalized = cdf
-
-	# Using cdf_normalized as a lookup table to equalize the image
-	flattened_enhanced_image = [
-		cdf_normalized[pixel] for pixel in image_array.flatten()
-	]
-	enhanced_image = np.array(flattened_enhanced_image, dtype="uint8").reshape(
-		image_array.shape
-	)
-
-	return Image.fromarray(enhanced_image)
+	return Image.fromarray(enhanced_image.astype(np.uint8))

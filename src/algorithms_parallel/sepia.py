@@ -1,9 +1,24 @@
 from typing import Union
 
 import numpy as np
+from numba import njit
 from PIL import Image
 
 from .gamma_correction import gamma_correction
+
+
+@njit(parallel=True)
+def _sepia_jit(image_array, sepia_matrix):
+	# Accounting for Numba's requirements:
+	# 1. np.dot requires matching dtypes (casting uint8 to float64)
+	# 2. np.dot only supports 1D or 2D arrays (reshaping 3D to 2D)
+	# 3. reshape() requires contiguous arrays (astype on a slice creates one)
+	h, w = image_array.shape[:2]
+	pixels = image_array[:, :, :3].astype(np.float64).reshape(-1, 3)
+
+	# Parallelized matrix multiplication and clipping
+	sepia_flat = np.dot(pixels, sepia_matrix.T)
+	return np.clip(sepia_flat, 0, 255).reshape(h, w, 3)
 
 
 def sepia(image: Union[str, Image.Image], gamma: float = 1) -> Image.Image:
@@ -38,10 +53,7 @@ def sepia(image: Union[str, Image.Image], gamma: float = 1) -> Image.Image:
 	])
 	# fmt: on
 
-	# Applying the sepia filter
-	sepia_image_array = np.dot(image_array[..., :3], sepia.T)
-
-	# Clipping values to the valid range (0-255)
-	sepia_image_array = np.clip(sepia_image_array, 0, 255)
+	# Using JIT for faster processing
+	sepia_image_array = _sepia_jit(image_array, sepia)
 
 	return Image.fromarray(sepia_image_array.astype(np.uint8))

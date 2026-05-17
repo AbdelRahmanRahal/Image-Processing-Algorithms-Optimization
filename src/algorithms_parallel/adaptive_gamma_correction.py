@@ -1,7 +1,39 @@
 from typing import Union
 
 import numpy as np
+from numba import njit, prange
 from PIL import Image
+
+
+@njit
+def calculate_gamma(avg_brightness: float, gamma_range: tuple) -> float:
+	"""
+	Function to calculate gamma value based on average brightness
+	"""
+	return gamma_range[0] + (gamma_range[1] - gamma_range[0]) * avg_brightness / 255
+
+
+@njit(parallel=True)
+def _adaptive_gamma_correction_jit(image_array, block_size, gamma_range):
+	height, width = image_array.shape[:2]
+
+	num_y_blocks = (height + block_size - 1) // block_size
+	num_x_blocks = (width + block_size - 1) // block_size
+
+	for i in prange(num_y_blocks):
+		y = i * block_size
+		for j in range(num_x_blocks):
+			x = j * block_size
+			block = image_array[y : y + block_size, x : x + block_size]
+			avg_brightness = np.mean(block)
+			gamma = calculate_gamma(avg_brightness, gamma_range)
+
+			# Applying gamma correction
+			block_corrected = np.power(block / 255.0, gamma) * 255
+			image_array[y : y + block_size, x : x + block_size] = (
+				block_corrected.astype(np.uint8)
+			)
+	return image_array
 
 
 def adaptive_gamma_correction(
@@ -36,28 +68,7 @@ def adaptive_gamma_correction(
 		image = Image.open(image)
 
 	image_array = np.array(image)
-	height, width = image_array.shape[:2]
 
-	# Processing each block
-	for y in range(0, height, block_size):
-		for x in range(0, width, block_size):
-			block = image_array[y : y + block_size, x : x + block_size]
-			avg_brightness = np.mean(block)
-			gamma = calculate_gamma(avg_brightness, gamma_range)
-
-			# Applying gamma correction
-			# gamma correction formula:
-			# P_c = (P_uc / P_max) ^ γ * P_max
-			block_corrected = np.power(block / 255.0, gamma) * 255
-			image_array[y : y + block_size, x : x + block_size] = (
-				block_corrected.astype(np.uint8)
-			)
+	image_array = _adaptive_gamma_correction_jit(image_array, block_size, gamma_range)
 
 	return Image.fromarray(image_array)
-
-
-def calculate_gamma(avg_brightness: np.floating, gamma_range: tuple) -> float:
-	"""
-	Function to calculate gamma value based on average brightness
-	"""
-	return gamma_range[0] + (gamma_range[1] - gamma_range[0]) * avg_brightness / 255

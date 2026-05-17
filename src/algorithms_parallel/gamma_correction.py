@@ -1,7 +1,13 @@
 from typing import Union
 
 import numpy as np
+from numba import njit
 from PIL import Image
+
+
+@njit(parallel=True)
+def _gamma_correction_jit(image_array, gamma):
+	return np.power(image_array / 255.0, gamma) * 255
 
 
 def gamma_correction(image: Union[str, Image.Image], gamma: float = 2.2) -> Image.Image:
@@ -40,7 +46,7 @@ def gamma_correction(image: Union[str, Image.Image], gamma: float = 2.2) -> Imag
 	# Applying gamma correction
 	# gamma correction formula:
 	# P_c = (P_uc / P_max) ^ γ * P_max
-	corrected_array = np.power(image_array / 255.0, gamma) * 255
+	corrected_array = _gamma_correction_jit(image_array, gamma)
 	corrected_image = Image.fromarray(corrected_array.astype(np.uint8))
 
 	return corrected_image

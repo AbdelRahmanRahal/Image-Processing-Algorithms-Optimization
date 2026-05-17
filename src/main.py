@@ -5,9 +5,7 @@ from PIL import ImageQt
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QFileDialog, QMessageBox, QMainWindow
-
-from gui.mainwindow_ui import Ui_MainWindow
+from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 
 # ---------- Import parallel algorithms ----------
 from algorithms_parallel.adaptive_gamma_correction import (
@@ -32,6 +30,14 @@ from algorithms_serial.histogram_equalization import histogram_equalization
 from algorithms_serial.mean_blur import mean_blur
 from algorithms_serial.sepia import sepia
 from algorithms_serial.sobel import sobel
+from gui.mainwindow_ui import Ui_MainWindow
+
+
+def _to_pixmap(pil_image: Image.Image, w: int = 487, h: int = 360) -> QPixmap:
+	qimage = ImageQt.toqimage(pil_image)
+	return QPixmap.fromImage(qimage).scaled(
+		w, h, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
+	)
 
 
 class ImageProcessorApp(QMainWindow, Ui_MainWindow):
@@ -45,17 +51,16 @@ class ImageProcessorApp(QMainWindow, Ui_MainWindow):
 	def _connect_signals(self):
 		"""Initialize signal-slot connections."""
 		self.loadImageButton.clicked.connect(self.open_image_dialog)
-		self.compareButton.clicked.connect(self.compare_serial_parallel)
 		self.algorithmsComboBox.currentTextChanged.connect(self.update_settings_layout)
 
-		# Setup individual algorithm buttons
-		self.applyAGCButton.clicked.connect(self.apply_adaptive_gamma_correction)
-		self.applyGammaCorrectionButton.clicked.connect(self.apply_gamma_correction)
-		self.applyGaussianBlurButton.clicked.connect(self.apply_gaussian_blur)
-		self.applyHEButton.clicked.connect(self.apply_histogram_equalization)
-		self.applyMeanButton.clicked.connect(self.apply_mean_blur)
-		self.applySepiaButton.clicked.connect(self.apply_sepia_filter)
-		self.applySobelButton.clicked.connect(self.apply_sobel_edge_detection)
+		# Every per-algorithm button now triggers compare_serial_parallel
+		self.applyAGCButton.clicked.connect(self.compare_serial_parallel)
+		self.applyGammaCorrectionButton.clicked.connect(self.compare_serial_parallel)
+		self.applyGaussianBlurButton.clicked.connect(self.compare_serial_parallel)
+		self.applyHEButton.clicked.connect(self.compare_serial_parallel)
+		self.applyMeanButton.clicked.connect(self.compare_serial_parallel)
+		self.applySepiaButton.clicked.connect(self.compare_serial_parallel)
+		self.applySobelButton.clicked.connect(self.compare_serial_parallel)
 
 		# Setup dynamic value labels
 		self.AGCminimumSlider.valueChanged.connect(self.set_AGC_minimum_range_value)
@@ -129,154 +134,17 @@ class ImageProcessorApp(QMainWindow, Ui_MainWindow):
 			)
 			self.originalImageLabel.setPixmap(pixmap)
 			self.processedImageLabel.clear()
-
-	def apply_adaptive_gamma_correction(self):
-		try:
-			self.image_path
-		except AttributeError:
-			QMessageBox.critical(None, "Error", "Please select an image first.")
-			return
-
-		block_size = self.blockSizeSpinBox.value()
-		gamma_min = self.AGCminimumSlider.value() / 100
-		gamma_max = self.AGCmaximumSlider.value() / 100
-
-		corrected_image = adaptive_gamma_correction(
-			self.image_path, block_size, (gamma_min, gamma_max)
-		)
-		corrected_image.save("src/processed/adaptive gamma correction.png")
-
-		qimage = ImageQt.toqimage(corrected_image)
-		self.processedImageLabel.setPixmap(
-			QPixmap.fromImage(qimage).scaled(
-				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
-			)
-		)
-
-	def apply_gamma_correction(self):
-		try:
-			self.image_path
-		except AttributeError:
-			QMessageBox.critical(None, "Error", "Please select an image first.")
-			return
-
-		gamma = self.gammaSlider.value() / 100
-
-		corrected_image = gamma_correction(self.image_path, gamma)
-		corrected_image.save("src/processed/gamma correction.png")
-
-		qimage = ImageQt.toqimage(corrected_image)
-		self.processedImageLabel.setPixmap(
-			QPixmap.fromImage(qimage).scaled(
-				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
-			)
-		)
-
-	def apply_gaussian_blur(self):
-		try:
-			self.image_path
-		except AttributeError:
-			QMessageBox.critical(None, "Error", "Please select an image first.")
-			return
-
-		kernel_size = self.gaussianKernelSizeSpinBox.value()
-		sigma = self.gaussianRadiusSlider.value() / 10
-
-		blurred_image = gb(self.image_path, kernel_size, sigma)
-		blurred_image.save("src/processed/gaussian blur.png")
-
-		qimage = ImageQt.toqimage(blurred_image)
-		self.processedImageLabel.setPixmap(
-			QPixmap.fromImage(qimage).scaled(
-				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
-			)
-		)
-
-	def apply_histogram_equalization(self):
-		try:
-			self.image_path
-		except AttributeError:
-			QMessageBox.critical(None, "Error", "Please select an image first.")
-			return
-
-		equalized_image = histogram_equalization(self.image_path)
-		equalized_image.save("src/processed/histogram equalization.png")
-
-		qimage = ImageQt.toqimage(equalized_image)
-		self.processedImageLabel.setPixmap(
-			QPixmap.fromImage(qimage).scaled(
-				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
-			)
-		)
-
-	def apply_mean_blur(self):
-		try:
-			self.image_path
-		except AttributeError:
-			QMessageBox.critical(None, "Error", "Please select an image first.")
-			return
-
-		kernel_size = self.meanKernelSizeSpinBox.value()
-
-		blurred_image = mean_blur(self.image_path, kernel_size)
-		blurred_image.save("src/processed/mean blur.png")
-
-		qimage = ImageQt.toqimage(blurred_image)
-		self.processedImageLabel.setPixmap(
-			QPixmap.fromImage(qimage).scaled(
-				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
-			)
-		)
-
-	def apply_sepia_filter(self):
-		try:
-			self.image_path
-		except AttributeError:
-			QMessageBox.critical(None, "Error", "Please select an image first.")
-			return
-
-		gamma = self.sepiaGammaSlider.value() / 100
-
-		sepia_image = sepia(self.image_path, gamma)
-		sepia_image.save("src/processed/sepia.png")
-
-		qimage = ImageQt.toqimage(sepia_image)
-		self.processedImageLabel.setPixmap(
-			QPixmap.fromImage(qimage).scaled(
-				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
-			)
-		)
-
-	def apply_sobel_edge_detection(self):
-		try:
-			self.image_path
-		except AttributeError:
-			QMessageBox.critical(None, "Error", "Please select an image first.")
-			return
-
-		sobel_image = sobel(self.image_path)
-		sobel_image.save("src/processed/sobel.png")
-
-		qimage = ImageQt.toqimage(sobel_image)
-		self.processedImageLabel.setPixmap(
-			QPixmap.fromImage(qimage).scaled(
-				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
-			)
-		)
+			self.parallelImageLabel.clear()
+			self.timeLabel.setText("")
 
 	def compare_serial_parallel(self):
-		try:
-			if self.image_path is None:
-				self.image_path
-		except AttributeError:
+		if not self.image_path:
 			QMessageBox.critical(None, "Error", "Please select an image first.")
 			return
 
-		# Determine selected algorithm
 		algo = self.algorithmsComboBox.currentText()
 
-		# Map to serial and parallel functions and their arguments
-		# (You'll need to adapt the argument extraction to match each algorithm)
+		# All algorithms accept a file path and open the image themselves.
 		if algo == "Adaptive Gamma Correction":
 			block_size = self.blockSizeSpinBox.value()
 			gamma_min = self.AGCminimumSlider.value() / 100
@@ -324,36 +192,33 @@ class ImageProcessorApp(QMainWindow, Ui_MainWindow):
 			QMessageBox.warning(None, "Error", "Unknown algorithm selected.")
 			return
 
-		# Run serial
+		# --- Serial run ---
+		self.processedImageLabel.clear()
+		self.parallelImageLabel.clear()
+		self.timeLabel.setText("Running serial…")
+		QtWidgets.QApplication.processEvents()  # flush: show "Running serial…" + cleared panels
+
 		start_serial = time.perf_counter()
 		serial_image = serial_func(*args)
 		serial_time = time.perf_counter() - start_serial
 
-		# Run parallel
+		# Show serial result immediately and flush to screen before parallel starts
+		self.processedImageLabel.setPixmap(_to_pixmap(serial_image))
+		self.timeLabel.setText(f"Serial: {serial_time:.4f}s  |  Running parallel…")
+		QtWidgets.QApplication.processEvents()  # flush: paint serial image now
+
+		# --- Parallel run ---
 		start_parallel = time.perf_counter()
 		parallel_image = parallel_func(*args)
 		parallel_time = time.perf_counter() - start_parallel
 
-		# Display serial image (middle)
-		qimage_serial = ImageQt.toqimage(serial_image)
-		self.processedImageLabel.setPixmap(
-			QPixmap.fromImage(qimage_serial).scaled(
-				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
-			)
-		)
+		# Show parallel result
+		self.parallelImageLabel.setPixmap(_to_pixmap(parallel_image))
 
-		# Display parallel image (right)
-		qimage_parallel = ImageQt.toqimage(parallel_image)
-		self.parallelImageLabel.setPixmap(
-			QPixmap.fromImage(qimage_parallel).scaled(
-				487, 360, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio
-			)
-		)
-
-		# Update time label
+		speedup = serial_time / parallel_time if parallel_time > 0 else float("inf")
 		self.timeLabel.setText(
-			f"Serial: {serial_time:.4f}s | Parallel: {parallel_time:.4f}s | "
-			f"Speedup: {serial_time / parallel_time:.2f}x"
+			f"Serial: {serial_time:.4f}s  |  Parallel: {parallel_time:.4f}s  |  "
+			f"Speedup: {speedup:.2f}x"
 		)
 
 

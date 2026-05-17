@@ -1,5 +1,3 @@
-from typing import Union
-
 import numpy as np
 from numba import njit, prange
 from PIL import Image
@@ -37,7 +35,7 @@ def _adaptive_gamma_correction_jit(image_array, block_size, gamma_range):
 
 
 def adaptive_gamma_correction(
-	image: Union[str, Image.Image],
+	image: Image.Image,
 	block_size: int = 16,
 	gamma_range: tuple[float, float] = (0.5, 2.0),
 ) -> Image.Image:
@@ -49,8 +47,7 @@ def adaptive_gamma_correction(
 	local brightness of different blocks within the image.
 
 	Parameters:
-	- image (Union[str, Image.Image]): Either a file path to an image (as a string) or a PIL `Image` object.
-	  If a string is provided, the image will be loaded using PIL.
+	- image (Image.Image): A PIL `Image` object.
 	- block_size (int, optional): The size of the blocks over which gamma correction is applied. Defaults to 16.
 	- gamma_range (tuple, optional): The minimum and maximum gamma values to use for correction. Defaults to (0.5, 2.0).
 
@@ -64,9 +61,6 @@ def adaptive_gamma_correction(
 	Note: The gamma value for each block is calculated based on the average brightness of the block,
 	allowing for adaptive enhancement across the image.
 	"""
-	if isinstance(image, str):  # If it's a string, then it's treated as a file path
-		image = Image.open(image)
-
 	image_array = np.array(image)
 
 	image_array = _adaptive_gamma_correction_jit(image_array, block_size, gamma_range)

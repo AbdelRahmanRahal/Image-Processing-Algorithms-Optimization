@@ -1,12 +1,10 @@
-from typing import Union
-
 import numpy as np
 from PIL import Image
 
 from .gamma_correction import gamma_correction
 
 
-def sepia(image: Union[str, Image.Image], gamma: float = 1) -> Image.Image:
+def sepia(image: Image.Image, gamma: float = 1) -> Image.Image:
 	"""
 	Applies a sepia filter to an input image, enhancing it with a warm brownish tone typical of old photographs.
 
@@ -15,8 +13,7 @@ def sepia(image: Union[str, Image.Image], gamma: float = 1) -> Image.Image:
 	Before applying the sepia filter, the image undergoes gamma correction to adjust its brightness and contrast.
 
 	Parameters:
-	- image (Union[str, Image.Image]): Either a file path to an image (as a string) or a PIL `Image` object.
-	  If a string is provided, the image will be loaded using PIL.
+	- image (Image.Image): A PIL `Image` object.
 	- gamma (float, optional): The gamma value to apply for gamma correction. Defaults to 1, which means no gamma correction is applied.
 
 	Returns:

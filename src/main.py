@@ -1,7 +1,7 @@
 import sys
 import time  # for timing
 
-from PIL import ImageQt
+from PIL import Image, ImageQt
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
@@ -142,51 +142,52 @@ class ImageProcessorApp(QMainWindow, Ui_MainWindow):
 			QMessageBox.critical(None, "Error", "Please select an image first.")
 			return
 
+		# Load the image once here to exclude I/O from timing comparisons
+		input_image = Image.open(self.image_path)
 		algo = self.algorithmsComboBox.currentText()
 
-		# All algorithms accept a file path and open the image themselves.
 		if algo == "Adaptive Gamma Correction":
 			block_size = self.blockSizeSpinBox.value()
 			gamma_min = self.AGCminimumSlider.value() / 100
 			gamma_max = self.AGCmaximumSlider.value() / 100
 			serial_func = adaptive_gamma_correction
 			parallel_func = adaptive_gamma_correction_parallel
-			args = (self.image_path, block_size, (gamma_min, gamma_max))
+			args = (input_image, block_size, (gamma_min, gamma_max))
 
 		elif algo == "Gamma Correction":
 			gamma = self.gammaSlider.value() / 100
 			serial_func = gamma_correction
 			parallel_func = gamma_correction_parallel
-			args = (self.image_path, gamma)
+			args = (input_image, gamma)
 
 		elif algo == "Gaussian Blur":
 			kernel_size = self.gaussianKernelSizeSpinBox.value()
 			sigma = self.gaussianRadiusSlider.value() / 10
 			serial_func = gb
 			parallel_func = gaussian_blur_parallel
-			args = (self.image_path, kernel_size, sigma)
+			args = (input_image, kernel_size, sigma)
 
 		elif algo == "Histogram Equalization":
 			serial_func = histogram_equalization
 			parallel_func = histogram_equalization_parallel
-			args = (self.image_path,)
+			args = (input_image,)
 
 		elif algo == "Mean Blur":
 			kernel_size = self.meanKernelSizeSpinBox.value()
 			serial_func = mean_blur
 			parallel_func = mean_blur_parallel
-			args = (self.image_path, kernel_size)
+			args = (input_image, kernel_size)
 
 		elif algo == "Sepia Filter":
 			gamma = self.sepiaGammaSlider.value() / 100
 			serial_func = sepia
 			parallel_func = sepia_parallel
-			args = (self.image_path, gamma)
+			args = (input_image, gamma)
 
 		elif algo == "Sobel Edge Detection":
 			serial_func = sobel
 			parallel_func = sobel_parallel
-			args = (self.image_path,)
+			args = (input_image,)
 
 		else:
 			QMessageBox.warning(None, "Error", "Unknown algorithm selected.")

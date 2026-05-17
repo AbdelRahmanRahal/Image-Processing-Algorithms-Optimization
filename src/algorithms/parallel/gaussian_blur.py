@@ -1,5 +1,3 @@
-from typing import Union
-
 import numpy as np
 from PIL import Image
 
@@ -7,7 +5,7 @@ from .convolve import convolve
 
 
 def gaussian_blur(
-	image: Union[str, Image.Image], kernel_size: int = 5, sigma: float = 1
+	image: Image.Image, kernel_size: int = 5, sigma: float = 1
 ) -> Image.Image:
 	"""
 	Applies Gaussian blur to an input image.
@@ -18,8 +16,7 @@ def gaussian_blur(
 	an even size is provided.
 
 	Parameters:
-	- image (Union[str, Image.Image]): Either a file path to an image (as a string) or a PIL `Image` object.
-	  If a string is provided, the image will be loaded using PIL.
+	- image (Image.Image): A PIL `Image` object.
 	- kernel_size (int, optional): The size of the Gaussian kernel. Defaults to 5.
 	- sigma (float, optional): The standard deviation of the Gaussian distribution. Controls the amount of blur. Defaults to 1.
 
@@ -33,9 +30,9 @@ def gaussian_blur(
 
 	Note: The Gaussian kernel is applied separately to each color channel (RGB) of the image.
 	"""
-	if isinstance(image, str):  # If it's a string, then it's treated as a file path
-		# Loading the image using PIL
-		image = Image.open(image)
+	# Ensure the image is in RGB mode to avoid IndexError with grayscale images
+	if image.mode != "RGB":
+		image = image.convert("RGB")
 
 	image_array = np.array(image)
 

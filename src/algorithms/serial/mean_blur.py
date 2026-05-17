@@ -1,12 +1,10 @@
-from typing import Union
-
 import numpy as np
 from PIL import Image
 
 from .convolve import convolve
 
 
-def mean_blur(image: Union[str, Image.Image], kernel_size: int = 5) -> Image.Image:
+def mean_blur(image: Image.Image, kernel_size: int = 5) -> Image.Image:
 	"""
 	Applies mean blur to an input image.
 
@@ -15,8 +13,7 @@ def mean_blur(image: Union[str, Image.Image], kernel_size: int = 5) -> Image.Ima
 	including itself. This process reduces image noise and detail.
 
 	Parameters:
-	- image (Union[str, Image.Image]): Either a file path to an image (as a string) or a PIL `Image` object.
-	  If a string is provided, the image will be loaded using PIL.
+	- image (Image.Image): A PIL `Image` object.
 	- kernel_size (int, optional): The size of the square kernel used for blurring. Defaults to 5.
 
 	Returns:
@@ -32,9 +29,9 @@ def mean_blur(image: Union[str, Image.Image], kernel_size: int = 5) -> Image.Ima
 	the blur is applied. The function processes each color channel (RGB) separately
 	to maintain color integrity.
 	"""
-	if isinstance(image, str):  # If it's a string, then it's treated as a file path
-		# Loading the image using PIL
-		image = Image.open(image)
+	# Ensure the image is in RGB mode to avoid IndexError with grayscale images
+	if image.mode != "RGB":
+		image = image.convert("RGB")
 
 	image_array = np.array(image)
 

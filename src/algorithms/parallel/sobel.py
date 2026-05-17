@@ -1,12 +1,10 @@
-from typing import Union
-
 import numpy as np
 from PIL import Image
 
 from .convolve import convolve
 
 
-def sobel(image: Union[str, Image.Image]) -> Image.Image:
+def sobel(image: Image.Image) -> Image.Image:
 	"""
 	Applies the Sobel edge detection algorithm to an input image.
 
@@ -17,8 +15,7 @@ def sobel(image: Union[str, Image.Image]) -> Image.Image:
 	highlighting the edges.
 
 	Parameters:
-	- image (Union[str, Image.Image]): Either a file path to an image (as a string) or a PIL `Image` object.
-	  If a string is provided, the image will be loaded using PIL and converted to grayscale.
+	- image (Image.Image): A PIL `Image` object.
 
 	Returns:
 	- Image.Image: A PIL `Image` object representing the edges detected in the original image.
@@ -31,11 +28,8 @@ def sobel(image: Union[str, Image.Image]) -> Image.Image:
 	Note: The Sobel operator is applied separately in the x and y directions, and the magnitudes of the gradients
 	are combined to produce the final edge-detected image. The output image is normalized to the range 0-255.
 	"""
-	if isinstance(image, str):  # If it's a string, then it's treated as a file path
-		# Loading the image using PIL
-		image = Image.open(image).convert("L")
-
-	image_array = np.array(image)
+	# Ensure the image is in grayscale for Sobel edge detection
+	image_array = np.array(image.convert("L"))
 
 	# fmt: off
 	# Sobel operators

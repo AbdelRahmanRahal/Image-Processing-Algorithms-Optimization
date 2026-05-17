@@ -1,8 +1,17 @@
-import time
-import numpy as np
-from PIL import Image
-import sys
 import os
+import sys
+import time
+import warnings
+
+import numpy as np
+from numba.core.errors import NumbaPerformanceWarning
+from numba import set_num_threads
+from PIL import Image
+
+# Suppress performance warnings
+warnings.simplefilter("ignore", category=NumbaPerformanceWarning)
+
+set_num_threads(20)
 
 # Ensure the 'src' directory is in the path for algorithm imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -16,7 +25,6 @@ try:
 	from algorithms.parallel.histogram_equalization import (
 		histogram_equalization as he_parallel,
 	)
-
 	from algorithms.parallel.mean_blur import mean_blur as mb_parallel
 	from algorithms.parallel.sepia import sepia as sepia_parallel
 	from algorithms.parallel.sobel import sobel as sobel_parallel
@@ -131,8 +139,8 @@ def main():
 
 	print("\nTo generate low-level profile reports for Perf:")
 	print("-" * 75)
-	print("1. Linux Perf:  perf stat -d python benchmark.py")
-	print("2. CProfile:    python -m cProfile -s tottime benchmark.py")
+	print("`perf stat -d python src.perf.test_whatever.py`")
+	print("Make sure to perf each serial and algorithm individually.")
 	print("=" * 75 + "\n")
 
 

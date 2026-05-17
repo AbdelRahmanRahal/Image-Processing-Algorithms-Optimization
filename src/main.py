@@ -33,6 +33,23 @@ from algorithms.serial.sobel import sobel
 from gui.mainwindow_ui import Ui_MainWindow
 
 
+def warm_up_parallel_algorithms():
+	"""Pre-compiles Numba JIT functions to avoid first-run latency."""
+	# Create a tiny 8x8 dummy image to trigger compilation
+	dummy_img = Image.new("RGB", (8, 8), color="red")
+	try:
+		# Each call triggers the JIT compilation for the underlying Numba functions
+		histogram_equalization_parallel(dummy_img)
+		gamma_correction_parallel(dummy_img, 1.2)
+		sepia_parallel(dummy_img, 1.0)
+		adaptive_gamma_correction_parallel(dummy_img, 8, (0.5, 1.5))
+		sobel_parallel(dummy_img)
+		mean_blur_parallel(dummy_img, 3)
+		gaussian_blur_parallel(dummy_img, 3, 1.0)
+	except Exception:
+		pass
+
+
 def _to_pixmap(pil_image: Image.Image, w: int = 487, h: int = 360) -> QPixmap:
 	qimage = ImageQt.toqimage(pil_image)
 	return QPixmap.fromImage(qimage).scaled(
@@ -226,6 +243,7 @@ class ImageProcessorApp(QMainWindow, Ui_MainWindow):
 if __name__ == "__main__":
 	app = QtWidgets.QApplication(sys.argv)
 	app.setWindowIcon(QtGui.QIcon("src/gui/icon.png"))
+	warm_up_parallel_algorithms()
 	window = ImageProcessorApp()
 	window.show()
 	sys.exit(app.exec())

@@ -1,0 +1,33 @@
+Total time: 3.2029s
+Average time: 0.3203s
+
+ Performance counter stats for 'python -m src.perf.test_parallel':
+
+                 0      context-switches:u               #      0.0 cs/sec  cs_per_second     
+                 0      cpu-migrations:u                 #      0.0 migrations/sec  migrations_per_second
+           219,578      page-faults:u                    #   6312.0 faults/sec  page_faults_per_second
+         34,787.11 msec task-clock:u                     #      6.2 CPUs  CPUs_utilized       
+       304,702,205      cpu_core/L1-dcache-load-misses/u #      nan %  l1d_miss_rate            (45.45%)
+        61,964,874      cpu_core/LLC-loads/u             #     78.0 %  llc_miss_rate            (45.73%)
+       104,030,498      cpu_core/branch-misses/u         #      0.3 %  branch_miss_rate         (39.84%)
+    33,426,238,107      cpu_core/branches/u              #    960.9 M/sec  branch_frequency     (40.00%)
+   100,754,544,567      cpu_core/cpu-cycles/u            #      2.9 GHz  cycles_frequency       (40.17%)
+   287,657,508,275      cpu_core/instructions/u          #      2.9 instructions  insn_per_cycle  (40.31%)
+           710,575      cpu_atom/LLC-loads/u             #      1.9 %  llc_miss_rate            (32.07%)
+         1,553,606      cpu_atom/branch-misses/u         #      0.0 %  branch_miss_rate         (21.31%)
+    30,228,670,035      cpu_atom/branches/u              #    869.0 M/sec  branch_frequency     (21.36%)
+    86,030,031,531      cpu_atom/cpu-cycles/u            #      2.5 GHz  cycles_frequency       (26.66%)
+   283,646,762,826      cpu_atom/instructions/u          #      3.3 instructions  insn_per_cycle  (26.31%)
+             TopdownL1 (cpu_core)                        #      6.0 %  tma_bad_speculation    
+                                                         #     15.1 %  tma_frontend_bound       (45.51%)
+                                                         #     15.3 %  tma_backend_bound      
+                                                         #     63.6 %  tma_retiring             (45.51%)
+             TopdownL1 (cpu_atom)                        #     32.4 %  tma_backend_bound        (37.28%)
+                                                         #      0.7 %  tma_frontend_bound       (37.36%)
+                                                         #      0.1 %  tma_bad_speculation    
+                                                         #     66.7 %  tma_retiring             (37.44%)
+
+       5.652121295 seconds time elapsed
+
+      31.350653000 seconds user
+       3.073009000 seconds sys

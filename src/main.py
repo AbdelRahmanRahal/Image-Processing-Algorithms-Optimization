@@ -8,28 +8,28 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 
 # ---------- Import parallel algorithms ----------
-from algorithms_parallel.adaptive_gamma_correction import (
+from algorithms.parallel.adaptive_gamma_correction import (
 	adaptive_gamma_correction as adaptive_gamma_correction_parallel,
 )
-from algorithms_parallel.gamma_correction import (
+from algorithms.parallel.gamma_correction import (
 	gamma_correction as gamma_correction_parallel,
 )
-from algorithms_parallel.gaussian_blur import gaussian_blur as gaussian_blur_parallel
-from algorithms_parallel.histogram_equalization import (
+from algorithms.parallel.gaussian_blur import gaussian_blur as gaussian_blur_parallel
+from algorithms.parallel.histogram_equalization import (
 	histogram_equalization as histogram_equalization_parallel,
 )
-from algorithms_parallel.mean_blur import mean_blur as mean_blur_parallel
-from algorithms_parallel.sepia import sepia as sepia_parallel
-from algorithms_parallel.sobel import sobel as sobel_parallel
+from algorithms.parallel.mean_blur import mean_blur as mean_blur_parallel
+from algorithms.parallel.sepia import sepia as sepia_parallel
+from algorithms.parallel.sobel import sobel as sobel_parallel
 
 # ---------- Import serial algorithms ----------
-from algorithms_serial.adaptive_gamma_correction import adaptive_gamma_correction
-from algorithms_serial.gamma_correction import gamma_correction
-from algorithms_serial.gaussian_blur import gaussian_blur as gb
-from algorithms_serial.histogram_equalization import histogram_equalization
-from algorithms_serial.mean_blur import mean_blur
-from algorithms_serial.sepia import sepia
-from algorithms_serial.sobel import sobel
+from algorithms.serial.adaptive_gamma_correction import adaptive_gamma_correction
+from algorithms.serial.gamma_correction import gamma_correction
+from algorithms.serial.gaussian_blur import gaussian_blur as gb
+from algorithms.serial.histogram_equalization import histogram_equalization
+from algorithms.serial.mean_blur import mean_blur
+from algorithms.serial.sepia import sepia
+from algorithms.serial.sobel import sobel
 from gui.mainwindow_ui import Ui_MainWindow
 
 

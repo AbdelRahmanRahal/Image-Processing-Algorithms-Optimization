@@ -2,6 +2,13 @@ import numpy as np
 from PIL import Image
 
 
+def calculate_gamma(avg_brightness: np.floating, gamma_range: tuple) -> float:
+	"""
+	Function to calculate gamma value based on average brightness
+	"""
+	return gamma_range[0] + (gamma_range[1] - gamma_range[0]) * avg_brightness / 255
+
+
 def adaptive_gamma_correction(
 	image: Image.Image,
 	block_size: int = 16,
@@ -48,10 +55,3 @@ def adaptive_gamma_correction(
 			)
 
 	return Image.fromarray(image_array)
-
-
-def calculate_gamma(avg_brightness: np.floating, gamma_range: tuple) -> float:
-	"""
-	Function to calculate gamma value based on average brightness
-	"""
-	return gamma_range[0] + (gamma_range[1] - gamma_range[0]) * avg_brightness / 255

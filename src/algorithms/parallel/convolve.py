@@ -42,6 +42,6 @@ def convolve(image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
 
 	for i in prange(y_out):  # Parallel loop like #pragma omp parallel for
 		for j in range(x_out):
-			new_image[i][j] = np.sum(image[i : i + m, j : j + n] * kernel)
+			new_image[i][j] = np.sum(image[i : i + m, j : j + m] * kernel)
 
 	return new_image

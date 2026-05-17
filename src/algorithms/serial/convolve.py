@@ -34,11 +34,11 @@ def convolve(image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
 	y, x = image.shape
 	m, n = kernel.shape
 
-	y = y - m + 1
-	x = x - m + 1
-	new_image = np.zeros((y, x))
-	for i in range(y):
-		for j in range(x):
+	y_out = y - m + 1
+	x_out = x - m + 1
+	new_image = np.zeros((y_out, x_out))
+	for i in range(y_out):
+		for j in range(x_out):
 			new_image[i][j] = np.sum(image[i : i + m, j : j + m] * kernel)
 
 	return new_image
